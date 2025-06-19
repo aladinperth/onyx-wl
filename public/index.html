@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Onyx Key System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+            text-align: center;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        button { 
+            padding: 15px 30px; 
+            background: #7c3aed; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover { background: #6d28d9; }
+        .result { 
+            background: #374151; 
+            padding: 20px; 
+            border-radius: 5px; 
+            margin: 20px 0; 
+            font-family: monospace; 
+            text-align: left;
+        }
+        .key { color: #10b981; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Onyx Key System</h1>
+        <p>Generate and test your Onyx whitelist keys</p>
+        
+        <button onclick="generateKey()">Generate New Key</button>
+        <button onclick="checkStatus()">Check API Status</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function generateKey() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Generating key...</div>';
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `
+                        <div class="result">
+                            <h3>✅ Key Generated Successfully!</h3>
+                            <p><strong>Your Key:</strong> <span class="key">${data.key}</span></p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <hr>
+                            <small>Use this key in your Roblox script to access Onyx features.</small>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Error</h3>
+                        <p>Failed to generate key: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        async function checkStatus() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Checking status...</div>';
+            
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>📊 API Status</h3>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Service:</strong> ${data.service}</p>
+                        <p><strong>Active Keys:</strong> ${data.active_keys}</p>
+                        <p><strong>Uptime:</strong> ${Math.round(data.uptime)} seconds</p>
+                        <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result">
+                        <h3>❌ Error</h3>
+                        <p>Failed to check status: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
