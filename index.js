@@ -4,6 +4,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static('public')); // Serve static files
 
 const API_SECRET = process.env.API_SECRET || "onyx_default_secret";
 const validKeys = new Map();
@@ -26,7 +27,8 @@ function isValidKey(key) {
     return key.length >= 8 && (key.startsWith('ONYX') || key.startsWith('WL'));
 }
 
-app.get('/', (req, res) => {
+// API Info endpoint
+app.get('/api', (req, res) => {
     res.json({ 
         status: 'Onyx Whitelist API',
         version: '1.0.0',
@@ -96,7 +98,7 @@ app.post('/validate', (req, res) => {
     }
 });
 
-// Support both GET and POST for generate (for easy testing)
+// Generate endpoint - both GET and POST
 app.get('/generate', (req, res) => {
     try {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -107,8 +109,7 @@ app.get('/generate', (req, res) => {
         
         res.json({ 
             key,
-            message: 'Test key generated',
-            instructions: 'Use this key in your Roblox script'
+            message: 'Test key generated via GET'
         });
     } catch (error) {
         res.status(500).json({ 
@@ -127,7 +128,7 @@ app.post('/generate', (req, res) => {
         
         res.json({ 
             key,
-            message: 'Test key generated'
+            message: 'Test key generated via POST'
         });
     } catch (error) {
         res.status(500).json({ 
@@ -146,7 +147,6 @@ app.get('/status', (req, res) => {
     });
 });
 
-// Cleanup expired keys every 10 seconds
 setInterval(() => {
     const now = Date.now() / 1000;
     const expiredKeys = [];
@@ -167,5 +167,9 @@ setInterval(() => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🔑 Onyx Whitelist API running on port ${PORT}`);
-    console.log(`🌐 API Secret: ${API_SECRET.substring(0, 4)}...`);
+    console.log(`🌐 Available endpoints:`);
+    console.log(`   GET  /generate - Generate test key`);
+    console.log(`   POST /generate - Generate test key`);
+    console.log(`   POST /validate - Validate key`);
+    console.log(`   GET  /status   - API status`);
 });
