@@ -96,6 +96,27 @@ app.post('/validate', (req, res) => {
     }
 });
 
+// Support both GET and POST for generate (for easy testing)
+app.get('/generate', (req, res) => {
+    try {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let key = 'ONYX';
+        for (let i = 0; i < 10; i++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        res.json({ 
+            key,
+            message: 'Test key generated',
+            instructions: 'Use this key in your Roblox script'
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            error: 'Generation failed' 
+        });
+    }
+});
+
 app.post('/generate', (req, res) => {
     try {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -120,10 +141,12 @@ app.get('/status', (req, res) => {
         status: 'running',
         service: 'Onyx Whitelist',
         active_keys: validKeys.size,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
     });
 });
 
+// Cleanup expired keys every 10 seconds
 setInterval(() => {
     const now = Date.now() / 1000;
     const expiredKeys = [];
@@ -135,9 +158,14 @@ setInterval(() => {
     }
     
     expiredKeys.forEach(key => validKeys.delete(key));
+    
+    if (expiredKeys.length > 0) {
+        console.log(`Cleaned up ${expiredKeys.length} expired keys`);
+    }
 }, 10000);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🔑 Onyx Whitelist API running on port ${PORT}`);
+    console.log(`🌐 API Secret: ${API_SECRET.substring(0, 4)}...`);
 });
